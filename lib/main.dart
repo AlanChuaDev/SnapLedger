@@ -91,7 +91,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext c) => ListenableBuilder(listenable: st, builder: (c, _) {
         double inc = 0, exp = 0;
         for (final t in st.tx) { if (t['type'] == '收入') inc += _n(t['amount']); if (t['type'] == '支出') exp += _n(t['amount']); }
-        final total = st.ac.fold<double>(0, (s, a) => s + _n(a['balance']));
+        final total = totalAssets();
         final pages = [TxPage(), CalPage(), StatsPage(), WalletPage()];
         const bgs = [pageBg, Color(0xFF12121F), Color(0xFFFFF8E7), pageBg];
         return Scaffold(
@@ -297,8 +297,30 @@ class _CalState extends State<CalPage> {
 
 Future<void> txSheet(BuildContext c, Map<String, dynamic>? t) async {
   if (st.ac.isEmpty) st.ac.add({'id': 'asset_default', 'name': '一般账户', 'balance': 0.0, 'type': '一般账户'});
-  await showModalBottomSheet<void>(context: c, isScrollControlled: true, showDragHandle: true, builder: (_) => TxSheet(t));
+  await showDialog<void>(context: c, builder: (_) => TxSheet(t));
 }
+
+Color tyCol(String k) => k == '支出' ? const Color(0xFFE91E63) : k == '收入' ? const Color(0xFF2ECC71) : const Color(0xFF2196F3);
+Map<String, dynamic> _cat(String id, String icon, String name) => <String, dynamic>{'id': id, 'icon': icon, 'name': name};
+List<Map<String, dynamic>> mains(String ty) {
+  final raw = (st.ex['mainCategories'] as Map?)?[ty];
+  if (raw is List && raw.isNotEmpty) return [for (final e in raw) e is Map ? Map<String, dynamic>.from(e) : _cat('$e', icOf('$e'), nmOf('$e'))];
+  final l = ty == '收入' ? iC : eC;
+  return [for (var i = 0; i < l.length; i++) _cat('${ty == '收入' ? 'inc' : 'exp'}_$i', l[i][0], st.t(l[i][1]))];
+}
+List<String> subsOf(Map<String, dynamic> m) {
+  final s = st.ex['subCategories'] as Map?;
+  final v = s?[m['id']] ?? s?[m['name']];
+  return v is List ? [for (final e in v) e is Map ? '${e['name']}' : '$e'] : [];
+}
+Future<String?> catPick(BuildContext c, String ty) => showModalBottomSheet<String>(
+      context: c, isScrollControlled: true, showDragHandle: true,
+      builder: (ctx) => SizedBox(height: MediaQuery.of(c).size.height * 0.75, child: ListView(children: [
+        for (final m in mains(ty)) ...[
+          ListTile(leading: Text('${m['icon']}', style: const TextStyle(fontSize: 26)), title: Text('${m['name']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17)), onTap: () => Navigator.pop(ctx, '${m['icon']} ${m['name']}')),
+          for (final x in subsOf(m)) ListTile(dense: true, contentPadding: const EdgeInsets.only(left: 76, right: 16), title: Text(x), onTap: () => Navigator.pop(ctx, '${m['icon']} ${m['name']}:$x')),
+        ],
+      ])));
 
 class TxSheet extends StatefulWidget {
   final Map<String, dynamic>? t;
@@ -308,9 +330,13 @@ class TxSheet extends StatefulWidget {
 }
 
 class _TxSheetState extends State<TxSheet> {
-  late String ty, cat, acc, to;
+  static const reps = ['不重复', '每天', '每周', '每月', '每年'];
+  static const repKeys = ['repeatNone', 'repeatDaily', 'repeatWeekly', 'repeatMonthly', 'repeatYearly'];
+  late String ty, cat, acc, to, tm, rep;
   late DateTime dt;
-  late TextEditingController am, rm;
+  late TextEditingController am, rm, fee;
+  String two(int v) => v.toString().padLeft(2, '0');
+  String nowTm() { final n = DateTime.now(); return '${two(n.hour)}:${two(n.minute)}'; }
   @override
   void initState() {
     super.initState();
@@ -321,24 +347,27 @@ class _TxSheetState extends State<TxSheet> {
     acc = names.contains('${t?['account']}') ? '${t?['account']}' : names.first;
     to = names.contains('${t?['toAccount']}') ? '${t?['toAccount']}' : names.firstWhere((n) => n != acc, orElse: () => names.first);
     dt = t == null ? DateTime.now() : pd('${t['fullDate']}');
+    tm = '${t?['time'] ?? nowTm()}';
+    rep = reps.contains('${t?['repeat']}') ? '${t?['repeat']}' : '不重复';
     am = TextEditingController(text: t == null ? '' : '${t['amount']}');
     rm = TextEditingController(text: '${t?['remark'] ?? ''}');
+    fee = TextEditingController(text: t != null && _n(t['fee']) > 0 ? '${t['fee']}' : '');
   }
 
   Future<void> ok() async {
     final a = double.tryParse(am.text.replaceAll(',', '.')) ?? 0;
     if (a <= 0 || (ty != '转账' && cat.isEmpty) || (ty == '转账' && to == acc)) return;
-    final old = widget.t;
+    final old = widget.t, now = DateTime.now();
     if (old != null) { st.eff(old, -1); st.tx.remove(old); }
-    final now = DateTime.now();
     final n = <String, dynamic>{
       ...?old,
       'id': old?['id'] ?? 'tx_${now.microsecondsSinceEpoch.toRadixString(36)}',
       'type': ty, 'category': ty == '转账' ? to : cat, 'amount': a, 'account': acc,
-      'time': old?['time'] ?? '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
-      'fullDate': ymd(dt), 'remark': rm.text.trim(), 'updatedAt': now.millisecondsSinceEpoch,
+      'time': tm, 'fullDate': ymd(dt), 'remark': rm.text.trim(), 'repeat': rep, 'updatedAt': now.millisecondsSinceEpoch,
     };
-    if (ty == '转账') { n['toAccount'] = to; } else { n.remove('toAccount'); n.remove('fee'); }
+    if (rep != '不重复') { n['repeatId'] = old?['repeatId'] ?? 'rep_${now.millisecondsSinceEpoch}'; } else { n.remove('repeatId'); }
+    final fv = double.tryParse(fee.text.replaceAll(',', '.')) ?? 0;
+    if (ty == '转账') { n['toAccount'] = to; if (fv > 0) { n['fee'] = fv; } else { n.remove('fee'); } } else { n.remove('toAccount'); n.remove('fee'); }
     st.eff(n, 1); st.tx.insert(0, n);
     await st.save();
     if (mounted) Navigator.pop(context);
@@ -352,38 +381,85 @@ class _TxSheetState extends State<TxSheet> {
     }
   }
 
-  Widget drop(String label, String v, ValueChanged<String> on) => Padding(padding: const EdgeInsets.only(top: 8), child: DropdownButtonFormField<String>(
-        value: v, decoration: InputDecoration(labelText: label),
-        items: [for (final a in st.ac) DropdownMenuItem(value: '${a['name']}', child: Text('${a['name']}'))],
-        onChanged: (x) => on(x!)));
+  Widget box(Widget child, {VoidCallback? onTap}) => GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque,
+      child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14), decoration: BoxDecoration(color: const Color(0xFFF7F9FC), borderRadius: BorderRadius.circular(22)), child: child));
+  Widget sec(String l, Widget w) => Padding(padding: const EdgeInsets.only(top: 18), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.only(left: 4, bottom: 8), child: Text(l, style: const TextStyle(color: Colors.black45, fontSize: 14))), w]));
+  Widget pills(String sel, ValueChanged<String> on) => SizedBox(height: 96, child: ListView(scrollDirection: Axis.horizontal, children: [
+        for (var i = 0; i < st.ac.length; i++) Builder(builder: (_) {
+          final a = st.ac[i], g = gradOf(i), s = '${a['name']}' == sel;
+          return GestureDetector(onTap: () => on('${a['name']}'), child: Center(child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150), width: s ? 150 : 112, height: s ? 84 : 68, margin: const EdgeInsets.only(right: 10), alignment: Alignment.center,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(28), gradient: LinearGradient(colors: g), border: s ? Border.all(color: Colors.white, width: 3) : null, boxShadow: s ? const [BoxShadow(color: Color(0x44000000), blurRadius: 10, offset: Offset(0, 4))] : null),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text('${a['name']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: s ? 19 : 15, fontWeight: FontWeight.w700)),
+              Text(money(_n(a['balance'])), style: const TextStyle(color: Colors.white70, fontSize: 13)),
+            ]))));
+        }),
+      ]));
+  List<String> topRemarks() {
+    final m = <String, int>{};
+    for (final t in st.tx) { final r = '${t['remark'] ?? ''}'.trim(); if (r.isNotEmpty) m[r] = (m[r] ?? 0) + 1; }
+    return (m.keys.toList()..sort((a, b) => m[b]!.compareTo(m[a]!))).take(5).toList();
+  }
+  static const blue = TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.w800, fontSize: 22);
 
   @override
-  Widget build(BuildContext c) => Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(c).viewInsets.bottom + 16),
-        child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          SegmentedButton<String>(
-            segments: [for (final k in ['支出', '收入', '转账']) ButtonSegment<String>(value: k, label: Text(lbl(k)))],
-            selected: {ty}, onSelectionChanged: (s) => setState(() { ty = s.first; cat = ''; })),
-          TextField(controller: am, keyboardType: const TextInputType.numberWithOptions(decimal: true), textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700), decoration: const InputDecoration(hintText: '0.00', border: InputBorder.none)),
-          if (ty != '转账') Wrap(spacing: 6, runSpacing: 6, children: [
-            for (final e in (ty == '收入' ? iC : eC)) ChoiceChip(label: Text('${e[0]} ${st.t(e[1])}'), selected: cat == '${e[0]} ${st.t(e[1])}', onSelected: (_) => setState(() => cat = '${e[0]} ${st.t(e[1])}')),
-          ]),
-          drop(st.f('账户', 'Account'), acc, (v) => setState(() => acc = v)),
-          if (ty == '转账') drop(st.f('转入账户', 'To account'), to, (v) => setState(() => to = v)),
-          ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.event), title: Text(ymd(dt)), onTap: () async {
-            final p = await showDatePicker(context: c, initialDate: dt, firstDate: DateTime(2000), lastDate: DateTime(2100));
-            if (p != null) setState(() => dt = p);
-          }),
-          TextField(controller: rm, decoration: InputDecoration(labelText: st.t('remark'))),
-          const SizedBox(height: 12),
-          Row(children: [
-            if (widget.t != null) TextButton(onPressed: del, child: Text(st.t('delete'), style: const TextStyle(color: outC))),
-            const Spacer(),
-            TextButton(onPressed: () => Navigator.pop(c), child: Text(st.t('cancel'))),
-            FilledButton(onPressed: ok, child: Text(st.t('save'))),
-          ]),
-        ])));
+  Widget build(BuildContext c) {
+    final tr = ty == '转账';
+    return Dialog(
+      backgroundColor: Colors.white, insetPadding: const EdgeInsets.all(18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(34)),
+      child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(22, 26, 22, 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(st.t('addTransaction'), style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 22),
+        Container(padding: const EdgeInsets.all(5), decoration: BoxDecoration(color: const Color(0xFFF1F3F7), borderRadius: BorderRadius.circular(30)), child: Row(children: [
+          for (final k in ['支出', '收入', '转账']) Expanded(child: GestureDetector(onTap: () => setState(() { ty = k; cat = ''; }), child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150), padding: const EdgeInsets.symmetric(vertical: 14), alignment: Alignment.center,
+            decoration: BoxDecoration(color: ty == k ? Colors.white : null, borderRadius: BorderRadius.circular(26), boxShadow: ty == k ? const [BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0, 2))] : null),
+            child: Text(lbl(k), style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: ty == k ? tyCol(k) : Colors.black38))))),
+        ])),
+        const SizedBox(height: 14),
+        box(Row(children: [
+          const Text('📅 ', style: TextStyle(fontSize: 22)),
+          GestureDetector(onTap: () async { final p = await showDatePicker(context: c, initialDate: dt, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (p != null) setState(() => dt = p); }, child: Text(ymd(dt), style: blue)),
+          const Spacer(),
+          const Text('🕐 ', style: TextStyle(fontSize: 22)),
+          GestureDetector(onTap: () async { final h = tm.split(':'); final p = await showTimePicker(context: c, initialTime: TimeOfDay(hour: int.tryParse(h[0]) ?? 0, minute: int.tryParse(h[1]) ?? 0)); if (p != null) setState(() => tm = '${two(p.hour)}:${two(p.minute)}'); }, child: Text(tm, style: blue)),
+          IconButton(onPressed: () => setState(() { dt = DateTime.now(); tm = nowTm(); }), icon: const Icon(Icons.sync, color: Colors.black38)),
+        ])),
+        const SizedBox(height: 12),
+        box(Row(children: [
+          const Text('🔁 ', style: TextStyle(fontSize: 22)), Text(st.t('repeatLabel'), style: const TextStyle(color: Colors.black45, fontSize: 18)), const Spacer(),
+          Text(st.t(repKeys[reps.indexOf(rep)]), style: blue.copyWith(fontSize: 18)), const Icon(Icons.chevron_right, color: Colors.black38),
+        ]), onTap: () async {
+          final r = await showDialog<String>(context: c, builder: (d) => SimpleDialog(title: Text(st.t('repeatFrequencyTitle')), children: [for (var i = 0; i < reps.length; i++) SimpleDialogOption(onPressed: () => Navigator.pop(d, reps[i]), child: Text(st.t(repKeys[i]), style: const TextStyle(fontSize: 17)))]));
+          if (r != null) setState(() => rep = r);
+        }),
+        sec(st.f('金额', 'Amount'), box(Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          Text(st.cur, style: const TextStyle(color: Color(0xFFFF6A2B), fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 6),
+          Expanded(child: TextField(controller: am, keyboardType: const TextInputType.numberWithOptions(decimal: true), style: const TextStyle(fontSize: 52, fontWeight: FontWeight.w800), decoration: const InputDecoration(border: InputBorder.none, hintText: '0.00', isDense: true))),
+        ]))),
+        if (!tr) sec(st.f('选择类别', 'Category'), box(Row(children: [
+          Expanded(child: Text(cat.isEmpty ? st.f('点击选择类别', 'Tap to choose') : cat, style: TextStyle(fontSize: 20, color: cat.isEmpty ? Colors.black87 : tyCol(ty)))), const Icon(Icons.chevron_right, color: Colors.black38),
+        ]), onTap: () async { final r = await catPick(c, ty); if (r != null) setState(() => cat = r); })),
+        sec(tr ? st.f('转出账户', 'From account') : ty == '收入' ? st.f('收款账户', 'Deposit to') : st.t('paymentAccount'), pills(acc, (v) => setState(() => acc = v))),
+        if (tr) sec(st.f('转入账户', 'To account'), pills(to, (v) => setState(() => to = v))),
+        if (tr) sec(st.f('手续费', 'Fee'), box(TextField(controller: fee, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(border: InputBorder.none, hintText: '0.00', isDense: true)))),
+        sec(st.f('备注', 'Remark'), box(TextField(controller: rm, style: const TextStyle(fontSize: 18), decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: st.t('remarkHint'))))),
+        const SizedBox(height: 12),
+        SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+          for (final r in topRemarks()) Padding(padding: const EdgeInsets.only(right: 8), child: ActionChip(label: Text(r, style: const TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.w700)), backgroundColor: const Color(0xFFEAF3FF), side: BorderSide.none, shape: const StadiumBorder(), onPressed: () => setState(() => rm.text = r))),
+        ])),
+        const SizedBox(height: 14),
+        Row(children: [
+          if (widget.t != null) TextButton(onPressed: del, child: Text(st.t('delete'), style: const TextStyle(color: outC, fontSize: 18))),
+          const Spacer(),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(st.t('cancel'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
+          const SizedBox(width: 8),
+          TextButton(onPressed: ok, child: Text(st.t('save'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
+        ]),
+      ])));
+  }
 }
 
 class StatsPage extends StatefulWidget {
@@ -425,30 +501,40 @@ class _StatsState extends State<StatsPage> {
   }
 }
 
-const grads = [[0xFF2DD4BF, 0xFF3B0764], [0xFF3A3A3A, 0xFF000000], [0xFFF6D365, 0xFFFDA085], [0xFF8E2DE2, 0xFF4A00E0], [0xFF4FACFE, 0xFF1565C0], [0xFF74B9FF, 0xFF2FB5F5], [0xFFF78CA2, 0xFFF9748F]];
+const grads = [[0xFF42A5F5, 0xFF1565C0], [0xFF64B5F6, 0xFF29B6F6], [0xFF26C6DA, 0xFF0288D1], [0xFF4FC3F7, 0xFF0277BD], [0xFF81D4FA, 0xFF0288D1], [0xFF80DEEA, 0xFF00838F]];
+Color hexC(dynamic v) { final h = '$v'.replaceAll('#', ''); return Color(int.tryParse(h.length == 6 ? 'FF$h' : h, radix: 16) ?? 0xFF888888); }
+bool hasCol(Map a) => a['color'] is List && (a['color'] as List).length == 2;
+List<Color> gradOf(int i) {
+  final a = st.ac[i];
+  if (hasCol(a)) return [hexC(a['color'][0]), hexC(a['color'][1])];
+  final g = grads[st.ac.take(i).where((x) => !hasCol(x)).length % grads.length];
+  return [Color(g[0]), Color(g[1])];
+}
+double totalAssets() => st.ac.where((a) => a['type'] != '信用卡').fold<double>(0, (s, a) => s + _n(a['balance']));
 
 class WalletPage extends StatelessWidget {
   const WalletPage({super.key});
   Widget card(BuildContext c, Map<String, dynamic> a, int i) {
-    final g = grads[i % grads.length], lim = _n(a['creditLimit']), bal = _n(a['balance']);
+    final g = gradOf(i), lim = _n(a['creditLimit']), bal = _n(a['balance']), cc = a['type'] == '信用卡';
     const wh = TextStyle(color: Colors.white);
     return GestureDetector(
       onTap: () => accDlg(c, a),
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(32), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(g[0]), Color(g[1])]), boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 12, offset: Offset(0, 6))]),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(32), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: g), boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 12, offset: Offset(0, 6))]),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Container(width: 58, height: 58, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0x33FFFFFF), borderRadius: BorderRadius.circular(18)), child: const Text('💵', style: TextStyle(fontSize: 28))),
           const SizedBox(height: 8),
           Text('${a['name']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: wh.copyWith(color: Colors.white70, fontSize: 17)),
-          FittedBox(fit: BoxFit.scaleDown, child: Text(lim > 0 ? '${st.f('可用', 'Available')} ${money(lim + bal)}' : money(bal), style: wh.copyWith(fontSize: 26, fontWeight: FontWeight.w800))),
-          if (lim > 0) Text('${st.f('额度', 'Limit')} ${st.cur} ${lim.toStringAsFixed(0)}', style: wh.copyWith(color: Colors.white70, fontSize: 13)),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(cc ? '${st.f('可用', 'Available')} ${money(bal)}' : money(bal), style: wh.copyWith(fontSize: 26, fontWeight: FontWeight.w800))),
+          if (cc) Text('${st.f('额度', 'Limit')} ${st.cur} ${lim.toStringAsFixed(0)}', style: wh.copyWith(color: Colors.white70, fontSize: 13)),
+          if (cc) Text('📅 ${a['billDay'] ?? 1}${st.t('billDayLabel')} | ${a['dueDay'] ?? 20}${st.t('dueDayLabel')}', style: wh.copyWith(color: Colors.white70, fontSize: 12)),
         ])));
   }
   Widget btn(Widget icon, String l, VoidCallback f) => Padding(padding: const EdgeInsets.only(top: 8), child: OutlinedButton.icon(onPressed: f, icon: icon, label: Text(l)));
   @override
   Widget build(BuildContext c) {
-    final total = st.ac.fold<double>(0, (s, a) => s + _n(a['balance']));
+    final total = totalAssets();
     return ListView(padding: const EdgeInsets.fromLTRB(14, 16, 14, 24), children: [
       Row(children: [Text(st.t('tabWallet'), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800)), const Spacer(), Text('${st.f('管理', 'Manage')}(${st.ac.length})', style: const TextStyle(color: Color(0xFF2196F3), fontSize: 18))]),
       const SizedBox(height: 14),
