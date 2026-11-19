@@ -97,13 +97,13 @@ class _HomeState extends State<Home> {
         return Scaffold(
           body: Column(children: [
             Container(height: MediaQuery.of(c).padding.top, color: const Color(0xFFF8F8F8)),
-            Container(width: double.infinity, padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            Container(width: double.infinity, padding: const EdgeInsets.fromLTRB(11.5, 10.1, 11.5, 10.1),
               decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF7B2CBF), Color(0xFF2F6FFF)])),
               child: Row(children: [
-                const Text('💰', style: TextStyle(fontSize: 30)), const SizedBox(width: 8),
+                const Text('💰', style: TextStyle(fontSize: 21.6)), const SizedBox(width: 5.8),
                 Expanded(child: FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text.rich(TextSpan(children: [
-                  TextSpan(text: '${st.f('余额', 'Balance')}: ${money(total)}', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
-                  TextSpan(text: '  +${fm(inc)}  -${fm(exp)}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white70)),
+                  TextSpan(text: '${st.f('余额', 'Balance')}: ${money(total)}', style: const TextStyle(fontSize: 20.2, fontWeight: FontWeight.w700)),
+                  TextSpan(text: '  +${fm(inc)}  -${fm(exp)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white70)),
                 ]), style: const TextStyle(color: Colors.white)))),
               ])),
             Expanded(child: ColoredBox(color: bgs[i], child: pages[i])),
@@ -127,15 +127,21 @@ Widget txRow(BuildContext c, Map<String, dynamic> t, {bool dark = false}) {
   final col = ty == '支出' ? const Color(0xFFE91E63) : ty == '收入' ? const Color(0xFF2ECC71) : const Color(0xFF2196F3);
   final rm = '${t['remark'] ?? ''}';
   final title = (ty == '转账' ? '${t['toAccount'] ?? t['category']}' : '${t['category']}') + (rm.isEmpty ? '' : ' · $rm');
-  return Container(
-    margin: const EdgeInsets.only(bottom: 8),
-    decoration: BoxDecoration(color: dark ? const Color(0xFF1E2A3E) : Colors.white, borderRadius: BorderRadius.circular(16)),
-    child: ListTile(
-      onTap: () => txSheet(c, t),
-      leading: Container(width: 44, height: 44, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: col, width: 2.5)), child: Icon(ty == '支出' ? Icons.remove : ty == '收入' ? Icons.add : Icons.swap_horiz, color: col)),
-      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: dark ? Colors.white : const Color(0xFF222222))),
-      subtitle: Text('${t['time'] ?? ''} · ${t['account']}', style: TextStyle(color: dark ? Colors.white54 : Colors.black45)),
-      trailing: Text('${ty == '支出' ? '-' : '+'}${money(_n(t['amount']))}', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: col))));
+  return GestureDetector(
+    onTap: () => txSheet(c, t),
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(color: dark ? const Color(0xFF1E2A3E) : Colors.white, borderRadius: BorderRadius.circular(12)),
+      child: Row(children: [
+        Container(width: 32, height: 32, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: col, width: 2)), child: Icon(ty == '支出' ? Icons.remove : ty == '收入' ? Icons.add : Icons.swap_horiz, color: col, size: 17)),
+        const SizedBox(width: 11),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: dark ? Colors.white : const Color(0xFF222222))),
+          Text('${t['time'] ?? ''} · ${t['account']}', style: TextStyle(fontSize: 12, color: dark ? Colors.white54 : Colors.black45)),
+        ])),
+        const SizedBox(width: 8),
+        Text('${ty == '支出' ? '-' : '+'}${money(_n(t['amount']))}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: col)),
+      ])));
 }
 
 class TxPage extends StatefulWidget {
@@ -157,8 +163,8 @@ class _TxPageState extends State<TxPage> {
     }
   }
   Widget ov(String l, double v) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(l, style: const TextStyle(color: Colors.white70, fontSize: 16)),
-        Text(money(v), style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800)),
+        Text(l, style: const TextStyle(color: Colors.white70, fontSize: 11.5)),
+        Text(money(v), style: const TextStyle(color: Colors.white, fontSize: 21.6, fontWeight: FontWeight.w700)),
       ]);
   @override
   Widget build(BuildContext c) {
@@ -171,29 +177,29 @@ class _TxPageState extends State<TxPage> {
     final labels = st.lang == 'zh' ? ['本周', '本月', '近3个月', '近6个月', '全部'] : ['Week', 'Month', '3 months', '6 months', 'All'];
     final w = <Widget>[
       Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(28), gradient: const LinearGradient(colors: [Color(0xFF19B5FE), Color(0xFFC2306E)]), boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 14, offset: Offset(0, 6))]),
+        padding: const EdgeInsets.all(15.8),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.2), gradient: const LinearGradient(colors: [Color(0xFF19B5FE), Color(0xFFC2306E)]), boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 14, offset: Offset(0, 6))]),
         child: Column(children: [
           Row(children: [
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(st.f('今日概览', 'Daily Overview'), style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
+              Text(st.f('今日概览', 'Daily Overview'), style: const TextStyle(color: Colors.white, fontSize: 17.3, fontWeight: FontWeight.w700)),
               if (st.lang == 'zh') const Text('Daily Overview', style: TextStyle(color: Colors.white70)),
             ]),
             const Spacer(),
-            FilledButton(onPressed: () => txSheet(c, null), style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF6A2B), shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16)), child: Text('＋ ${st.t('addTransaction')}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700))),
+            FilledButton(onPressed: () => txSheet(c, null), style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF6A2B), shape: const StadiumBorder(), padding: const EdgeInsets.symmetric(horizontal: 15.8, vertical: 11.5)), child: Text('＋ ${st.t('addTransaction')}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
           ]),
-          const Divider(color: Colors.white38, height: 34),
+          const Divider(color: Colors.white38, height: 24.5),
           Row(children: [Expanded(child: ov(st.t('todayExpense'), e)), Expanded(child: ov(st.t('todayIncome'), n))]),
         ])),
-      const SizedBox(height: 14),
+      const SizedBox(height: 10.1),
       Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 3))]),
+        padding: const EdgeInsets.all(4.3),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14.4), boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 3))]),
         child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
-          for (var i = 0; i < labels.length; i++) Padding(padding: const EdgeInsets.only(right: 4), child: ChoiceChip(
-            label: Text(labels[i]), selected: f == i, showCheckmark: false, side: BorderSide.none, backgroundColor: Colors.transparent, selectedColor: const Color(0xFFE3F2FD),
-            labelStyle: TextStyle(fontSize: 16, color: f == i ? const Color(0xFF2196F3) : Colors.black54, fontWeight: f == i ? FontWeight.w700 : FontWeight.w400),
-            onSelected: (_) => setState(() => f = i))),
+          for (var i = 0; i < labels.length; i++) GestureDetector(onTap: () => setState(() => f = i), child: Container(
+            margin: const EdgeInsets.only(right: 2), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(color: f == i ? const Color(0xFFE3F2FD) : null, borderRadius: BorderRadius.circular(16)),
+            child: Text(labels[i], style: TextStyle(fontSize: 14, color: f == i ? const Color(0xFF2196F3) : Colors.black54, fontWeight: f == i ? FontWeight.w700 : FontWeight.w400)))),
         ])),
       ),
     ];
@@ -203,21 +209,21 @@ class _TxPageState extends State<TxPage> {
       if (k != d) {
         d = k;
         final dt = pd(k);
-        w.add(Padding(padding: const EdgeInsets.fromLTRB(4, 22, 4, 10), child: Row(children: [
-          Text('${dt.day}', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800)),
-          const SizedBox(width: 10),
+        w.add(Padding(padding: const EdgeInsets.fromLTRB(2.9, 15.8, 2.9, 7.2), child: Row(children: [
+          Text('${dt.day}', style: const TextStyle(fontSize: 28.8, fontWeight: FontWeight.w700)),
+          const SizedBox(width: 7.2),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(wd(dt), style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.black54)),
-            Text(ym(dt), style: const TextStyle(color: Colors.black45, fontSize: 13)),
+            Text(ym(dt), style: const TextStyle(color: Colors.black45, fontSize: 11)),
           ]),
           const Spacer(),
-          if ((dayExp[k] ?? 0) > 0) Text('-${money(dayExp[k]!)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+          if ((dayExp[k] ?? 0) > 0) Text('-${money(dayExp[k]!)}', style: const TextStyle(fontSize: 14.4, fontWeight: FontWeight.w700)),
         ])));
       }
       w.add(txRow(c, t));
     }
-    if (l.isEmpty) w.add(Padding(padding: const EdgeInsets.all(40), child: Center(child: Text(st.f('还没有记录，点“记一笔”开始', 'Nothing yet. Tap Add to start.'), style: const TextStyle(color: Colors.grey)))));
-    return ListView(padding: const EdgeInsets.fromLTRB(14, 14, 14, 24), children: w);
+    if (l.isEmpty) w.add(Padding(padding: const EdgeInsets.all(28.8), child: Center(child: Text(st.f('还没有记录，点“记一笔”开始', 'Nothing yet. Tap Add to start.'), style: const TextStyle(color: Colors.grey)))));
+    return ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 20), children: w);
   }
 }
 
@@ -230,7 +236,7 @@ class CalPage extends StatefulWidget {
 class _CalState extends State<CalPage> {
   static final _now = DateTime.now();
   DateTime mo = DateTime(_now.year, _now.month), sel = DateTime(_now.year, _now.month, _now.day);
-  Widget arrow(IconData i, VoidCallback f) => InkWell(onTap: f, customBorder: const CircleBorder(), child: Container(width: 54, height: 54, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF34344A)), child: Icon(i, color: const Color(0xFF8AB4F8), size: 32)));
+  Widget arrow(IconData i, VoidCallback f) => InkWell(onTap: f, customBorder: const CircleBorder(), child: Container(width: 38.9, height: 38.9, decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFF34344A)), child: Icon(i, color: const Color(0xFF8AB4F8), size: 23)));
   @override
   Widget build(BuildContext c) {
     final ex = <String, double>{}, inc = <String, double>{};
@@ -248,48 +254,48 @@ class _CalState extends State<CalPage> {
       cells.add(GestureDetector(
         onTap: () => setState(() { sel = d; if (!inM) mo = DateTime(d.year, d.month); }),
         child: Container(
-          decoration: BoxDecoration(color: s ? const Color(0xFF8AB4F8) : null, borderRadius: BorderRadius.circular(18)),
+          decoration: BoxDecoration(color: s ? const Color(0xFF8AB4F8) : null, borderRadius: BorderRadius.circular(13)),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text('${d.day}', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600, color: s ? const Color(0xFF10131F) : inM ? Colors.white : Colors.white38)),
-            if (!s && ex[k] != null) Text('-${ex[k]!.round()}', style: const TextStyle(fontSize: 10, color: Color(0xFFFF6B6B))),
-            if (!s && inc[k] != null) Text('+${inc[k]!.round()}', style: const TextStyle(fontSize: 10, color: Color(0xFF4ADE80))),
+            Text('${d.day}', style: TextStyle(fontSize: 13.7, fontWeight: FontWeight.w600, color: s ? const Color(0xFF10131F) : inM ? Colors.white : Colors.white38)),
+            if (!s && ex[k] != null) Text('-${ex[k]!.round()}', style: const TextStyle(fontSize: 11, color: Color(0xFFFF6B6B))),
+            if (!s && inc[k] != null) Text('+${inc[k]!.round()}', style: const TextStyle(fontSize: 11, color: Color(0xFF4ADE80))),
           ]))));
     }
     final sk = ymd(sel);
     final dl = st.tx.where((t) => '${t['fullDate']}' == sk).toList()..sort((a, b) => ts(b).compareTo(ts(a)));
     final days = st.lang == 'zh' ? ['日', '一', '二', '三', '四', '五', '六'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    return ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 90), children: [
+    return ListView(padding: const EdgeInsets.fromLTRB(8.6, 8.6, 8.6, 64.8), children: [
       Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: const Color(0xFF22222F), borderRadius: BorderRadius.circular(32), border: Border.all(color: const Color(0x22FFFFFF))),
+        padding: const EdgeInsets.all(10.1),
+        decoration: BoxDecoration(color: const Color(0xFF22222F), borderRadius: BorderRadius.circular(23), border: Border.all(color: const Color(0x22FFFFFF))),
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             arrow(Icons.arrow_left, () => setState(() => mo = DateTime(mo.year, mo.month - 1))),
-            Text(ym(mo), style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800)),
+            Text(ym(mo), style: const TextStyle(color: Colors.white, fontSize: 18.7, fontWeight: FontWeight.w700)),
             arrow(Icons.arrow_right, () => setState(() => mo = DateTime(mo.year, mo.month + 1))),
           ]),
-          const SizedBox(height: 14),
-          Row(children: [for (final x in days) Expanded(child: Center(child: Text(x, style: const TextStyle(color: Colors.white54, fontSize: 16))))]),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10.1),
+          Row(children: [for (final x in days) Expanded(child: Center(child: Text(x, style: const TextStyle(color: Colors.white54, fontSize: 11.5))))]),
+          const SizedBox(height: 4.3),
           GridView.count(crossAxisCount: 7, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), childAspectRatio: 0.8, children: cells),
         ])),
-      const SizedBox(height: 14),
+      const SizedBox(height: 10.1),
       Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(28)),
+        padding: const EdgeInsets.all(11.5),
+        decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(20.2)),
         child: Column(children: [
           Row(children: [
-            Text(sk, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)), const Spacer(),
-            Flexible(child: Text('${st.f('收入', 'Income')}: ${money(inc[sk] ?? 0)} | ${st.f('支出', 'Expense')}: ${money(ex[sk] ?? 0)}', style: const TextStyle(color: Colors.white54, fontSize: 13), overflow: TextOverflow.ellipsis)),
+            Text(sk, style: const TextStyle(color: Colors.white, fontSize: 15.8, fontWeight: FontWeight.w700)), const Spacer(),
+            Flexible(child: Text('${st.f('收入', 'Income')}: ${money(inc[sk] ?? 0)} | ${st.f('支出', 'Expense')}: ${money(ex[sk] ?? 0)}', style: const TextStyle(color: Colors.white54, fontSize: 11), overflow: TextOverflow.ellipsis)),
           ]),
           const Divider(color: Colors.white24),
           Row(children: [
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('💰 ${st.t('totalIncomeLabel')}', style: const TextStyle(color: Color(0xFF4ADE80))), Text(money(inc[sk] ?? 0), style: const TextStyle(color: Color(0xFF4ADE80), fontSize: 30, fontWeight: FontWeight.w800))])),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('💸 ${st.t('totalExpenseLabel')}', style: const TextStyle(color: Color(0xFFFF6B6B))), Text(money(ex[sk] ?? 0), style: const TextStyle(color: Color(0xFFFF6B6B), fontSize: 30, fontWeight: FontWeight.w800))])),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('💰 ${st.t('totalIncomeLabel')}', style: const TextStyle(color: Color(0xFF4ADE80))), Text(money(inc[sk] ?? 0), style: const TextStyle(color: Color(0xFF4ADE80), fontSize: 21.6, fontWeight: FontWeight.w700))])),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('💸 ${st.t('totalExpenseLabel')}', style: const TextStyle(color: Color(0xFFFF6B6B))), Text(money(ex[sk] ?? 0), style: const TextStyle(color: Color(0xFFFF6B6B), fontSize: 21.6, fontWeight: FontWeight.w700))])),
           ]),
         ])),
-      Padding(padding: const EdgeInsets.fromLTRB(4, 20, 4, 10), child: Text('📋 ${st.f('交易记录', 'Transactions')}', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800))),
-      if (dl.isEmpty) Container(height: 140, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(24)), child: Text(st.f('该日暂无交易记录', 'No transactions that day'), style: const TextStyle(color: Colors.white54, fontSize: 17)))
+      Padding(padding: const EdgeInsets.fromLTRB(2.9, 14.4, 2.9, 7.2), child: Text('📋 ${st.f('交易记录', 'Transactions')}', style: const TextStyle(color: Colors.white, fontSize: 14.4, fontWeight: FontWeight.w700))),
+      if (dl.isEmpty) Container(height: 100.8, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(17.3)), child: Text(st.f('该日暂无交易记录', 'No transactions that day'), style: const TextStyle(color: Colors.white54, fontSize: 12.2)))
       else ...[for (final t in dl) txRow(c, t, dark: true)],
     ]);
   }
@@ -317,8 +323,8 @@ Future<String?> catPick(BuildContext c, String ty) => showModalBottomSheet<Strin
       context: c, isScrollControlled: true, showDragHandle: true,
       builder: (ctx) => SizedBox(height: MediaQuery.of(c).size.height * 0.75, child: ListView(children: [
         for (final m in mains(ty)) ...[
-          ListTile(leading: Text('${m['icon']}', style: const TextStyle(fontSize: 26)), title: Text('${m['name']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17)), onTap: () => Navigator.pop(ctx, '${m['icon']} ${m['name']}')),
-          for (final x in subsOf(m)) ListTile(dense: true, contentPadding: const EdgeInsets.only(left: 76, right: 16), title: Text(x), onTap: () => Navigator.pop(ctx, '${m['icon']} ${m['name']}:$x')),
+          ListTile(leading: Text('${m['icon']}', style: const TextStyle(fontSize: 18.7)), title: Text('${m['name']}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.2)), onTap: () => Navigator.pop(ctx, '${m['icon']} ${m['name']}')),
+          for (final x in subsOf(m)) ListTile(dense: true, contentPadding: const EdgeInsets.only(left: 54.7, right: 11.5), title: Text(x), onTap: () => Navigator.pop(ctx, '${m['icon']} ${m['name']}:$x')),
         ],
       ])));
 
@@ -382,18 +388,18 @@ class _TxSheetState extends State<TxSheet> {
   }
 
   Widget box(Widget child, {VoidCallback? onTap}) => GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque,
-      child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14), decoration: BoxDecoration(color: const Color(0xFFF7F9FC), borderRadius: BorderRadius.circular(22)), child: child));
-  Widget sec(String l, Widget w) => Padding(padding: const EdgeInsets.only(top: 18), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Padding(padding: const EdgeInsets.only(left: 4, bottom: 8), child: Text(l, style: const TextStyle(color: Colors.black45, fontSize: 14))), w]));
-  Widget pills(String sel, ValueChanged<String> on) => SizedBox(height: 96, child: ListView(scrollDirection: Axis.horizontal, children: [
+      child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10.1), decoration: BoxDecoration(color: const Color(0xFFF7F9FC), borderRadius: BorderRadius.circular(15.8)), child: child));
+  Widget sec(String l, Widget w) => Padding(padding: const EdgeInsets.only(top: 13), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.only(left: 2.9, bottom: 5.8), child: Text(l, style: const TextStyle(color: Colors.black45, fontSize: 11))), w]));
+  Widget pills(String sel, ValueChanged<String> on) => SizedBox(height: 69.1, child: ListView(scrollDirection: Axis.horizontal, children: [
         for (var i = 0; i < st.ac.length; i++) Builder(builder: (_) {
           final a = st.ac[i], g = gradOf(i), s = '${a['name']}' == sel;
           return GestureDetector(onTap: () => on('${a['name']}'), child: Center(child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150), width: s ? 150 : 112, height: s ? 84 : 68, margin: const EdgeInsets.only(right: 10), alignment: Alignment.center,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(28), gradient: LinearGradient(colors: g), border: s ? Border.all(color: Colors.white, width: 3) : null, boxShadow: s ? const [BoxShadow(color: Color(0x44000000), blurRadius: 10, offset: Offset(0, 4))] : null),
+            duration: const Duration(milliseconds: 150), width: s ? 108 : 80.6, height: s ? 60.5 : 49, margin: const EdgeInsets.only(right: 7.2), alignment: Alignment.center,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(20.2), gradient: LinearGradient(colors: g), border: s ? Border.all(color: Colors.white, width: 2.2) : null, boxShadow: s ? const [BoxShadow(color: Color(0x44000000), blurRadius: 10, offset: Offset(0, 4))] : null),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text('${a['name']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: s ? 19 : 15, fontWeight: FontWeight.w700)),
-              Text(money(_n(a['balance'])), style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              Text('${a['name']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: s ? 13.7 : 11, fontWeight: FontWeight.w700)),
+              Text(money(_n(a['balance'])), style: const TextStyle(color: Colors.white70, fontSize: 11)),
             ]))));
         }),
       ]));
@@ -402,61 +408,61 @@ class _TxSheetState extends State<TxSheet> {
     for (final t in st.tx) { final r = '${t['remark'] ?? ''}'.trim(); if (r.isNotEmpty) m[r] = (m[r] ?? 0) + 1; }
     return (m.keys.toList()..sort((a, b) => m[b]!.compareTo(m[a]!))).take(5).toList();
   }
-  static const blue = TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.w800, fontSize: 22);
+  static const blue = TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.w700, fontSize: 15.8);
 
   @override
   Widget build(BuildContext c) {
     final tr = ty == '转账';
     return Dialog(
-      backgroundColor: Colors.white, insetPadding: const EdgeInsets.all(18), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(34)),
-      child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(22, 26, 22, 10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(st.t('addTransaction'), style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 22),
-        Container(padding: const EdgeInsets.all(5), decoration: BoxDecoration(color: const Color(0xFFF1F3F7), borderRadius: BorderRadius.circular(30)), child: Row(children: [
+      backgroundColor: Colors.white, insetPadding: const EdgeInsets.all(13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.5)),
+      child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(15.8, 18.7, 15.8, 7.2), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(st.t('addTransaction'), style: const TextStyle(fontSize: 21.6, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 15.8),
+        Container(padding: const EdgeInsets.all(3.6), decoration: BoxDecoration(color: const Color(0xFFF1F3F7), borderRadius: BorderRadius.circular(21.6)), child: Row(children: [
           for (final k in ['支出', '收入', '转账']) Expanded(child: GestureDetector(onTap: () => setState(() { ty = k; cat = ''; }), child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150), padding: const EdgeInsets.symmetric(vertical: 14), alignment: Alignment.center,
-            decoration: BoxDecoration(color: ty == k ? Colors.white : null, borderRadius: BorderRadius.circular(26), boxShadow: ty == k ? const [BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0, 2))] : null),
-            child: Text(lbl(k), style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: ty == k ? tyCol(k) : Colors.black38))))),
+            duration: const Duration(milliseconds: 150), padding: const EdgeInsets.symmetric(vertical: 10.1), alignment: Alignment.center,
+            decoration: BoxDecoration(color: ty == k ? Colors.white : null, borderRadius: BorderRadius.circular(18.7), boxShadow: ty == k ? const [BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0, 2))] : null),
+            child: Text(lbl(k), style: TextStyle(fontSize: 13.7, fontWeight: FontWeight.w700, color: ty == k ? tyCol(k) : Colors.black38))))),
         ])),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10.1),
         box(Row(children: [
-          const Text('📅 ', style: TextStyle(fontSize: 22)),
+          const Text('📅 ', style: TextStyle(fontSize: 15.8)),
           GestureDetector(onTap: () async { final p = await showDatePicker(context: c, initialDate: dt, firstDate: DateTime(2000), lastDate: DateTime(2100)); if (p != null) setState(() => dt = p); }, child: Text(ymd(dt), style: blue)),
           const Spacer(),
-          const Text('🕐 ', style: TextStyle(fontSize: 22)),
+          const Text('🕐 ', style: TextStyle(fontSize: 15.8)),
           GestureDetector(onTap: () async { final h = tm.split(':'); final p = await showTimePicker(context: c, initialTime: TimeOfDay(hour: int.tryParse(h[0]) ?? 0, minute: int.tryParse(h[1]) ?? 0)); if (p != null) setState(() => tm = '${two(p.hour)}:${two(p.minute)}'); }, child: Text(tm, style: blue)),
           IconButton(onPressed: () => setState(() { dt = DateTime.now(); tm = nowTm(); }), icon: const Icon(Icons.sync, color: Colors.black38)),
         ])),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8.6),
         box(Row(children: [
-          const Text('🔁 ', style: TextStyle(fontSize: 22)), Text(st.t('repeatLabel'), style: const TextStyle(color: Colors.black45, fontSize: 18)), const Spacer(),
-          Text(st.t(repKeys[reps.indexOf(rep)]), style: blue.copyWith(fontSize: 18)), const Icon(Icons.chevron_right, color: Colors.black38),
+          const Text('🔁 ', style: TextStyle(fontSize: 15.8)), Text(st.t('repeatLabel'), style: const TextStyle(color: Colors.black45, fontSize: 13)), const Spacer(),
+          Text(st.t(repKeys[reps.indexOf(rep)]), style: blue.copyWith(fontSize: 13)), const Icon(Icons.chevron_right, color: Colors.black38),
         ]), onTap: () async {
-          final r = await showDialog<String>(context: c, builder: (d) => SimpleDialog(title: Text(st.t('repeatFrequencyTitle')), children: [for (var i = 0; i < reps.length; i++) SimpleDialogOption(onPressed: () => Navigator.pop(d, reps[i]), child: Text(st.t(repKeys[i]), style: const TextStyle(fontSize: 17)))]));
+          final r = await showDialog<String>(context: c, builder: (d) => SimpleDialog(title: Text(st.t('repeatFrequencyTitle')), children: [for (var i = 0; i < reps.length; i++) SimpleDialogOption(onPressed: () => Navigator.pop(d, reps[i]), child: Text(st.t(repKeys[i]), style: const TextStyle(fontSize: 12.2)))]));
           if (r != null) setState(() => rep = r);
         }),
         sec(st.f('金额', 'Amount'), box(Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          Text(st.cur, style: const TextStyle(color: Color(0xFFFF6A2B), fontSize: 30, fontWeight: FontWeight.w800)), const SizedBox(width: 6),
-          Expanded(child: TextField(controller: am, keyboardType: const TextInputType.numberWithOptions(decimal: true), style: const TextStyle(fontSize: 52, fontWeight: FontWeight.w800), decoration: const InputDecoration(border: InputBorder.none, hintText: '0.00', isDense: true))),
+          Text(st.cur, style: const TextStyle(color: Color(0xFFFF6A2B), fontSize: 21.6, fontWeight: FontWeight.w700)), const SizedBox(width: 4.3),
+          Expanded(child: TextField(controller: am, keyboardType: const TextInputType.numberWithOptions(decimal: true), style: const TextStyle(fontSize: 37.4, fontWeight: FontWeight.w700), decoration: const InputDecoration(border: InputBorder.none, hintText: '0.00', isDense: true))),
         ]))),
         if (!tr) sec(st.f('选择类别', 'Category'), box(Row(children: [
-          Expanded(child: Text(cat.isEmpty ? st.f('点击选择类别', 'Tap to choose') : cat, style: TextStyle(fontSize: 20, color: cat.isEmpty ? Colors.black87 : tyCol(ty)))), const Icon(Icons.chevron_right, color: Colors.black38),
+          Expanded(child: Text(cat.isEmpty ? st.f('点击选择类别', 'Tap to choose') : cat, style: TextStyle(fontSize: 14.4, color: cat.isEmpty ? Colors.black87 : tyCol(ty)))), const Icon(Icons.chevron_right, color: Colors.black38),
         ]), onTap: () async { final r = await catPick(c, ty); if (r != null) setState(() => cat = r); })),
         sec(tr ? st.f('转出账户', 'From account') : ty == '收入' ? st.f('收款账户', 'Deposit to') : st.t('paymentAccount'), pills(acc, (v) => setState(() => acc = v))),
         if (tr) sec(st.f('转入账户', 'To account'), pills(to, (v) => setState(() => to = v))),
         if (tr) sec(st.f('手续费', 'Fee'), box(TextField(controller: fee, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(border: InputBorder.none, hintText: '0.00', isDense: true)))),
-        sec(st.f('备注', 'Remark'), box(TextField(controller: rm, style: const TextStyle(fontSize: 18), decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: st.t('remarkHint'))))),
-        const SizedBox(height: 12),
+        sec(st.f('备注', 'Remark'), box(TextField(controller: rm, style: const TextStyle(fontSize: 13), decoration: InputDecoration(border: InputBorder.none, isDense: true, hintText: st.t('remarkHint'))))),
+        const SizedBox(height: 8.6),
         SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
-          for (final r in topRemarks()) Padding(padding: const EdgeInsets.only(right: 8), child: ActionChip(label: Text(r, style: const TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.w700)), backgroundColor: const Color(0xFFEAF3FF), side: BorderSide.none, shape: const StadiumBorder(), onPressed: () => setState(() => rm.text = r))),
+          for (final r in topRemarks()) Padding(padding: const EdgeInsets.only(right: 5.8), child: ActionChip(label: Text(r, style: const TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.w700)), backgroundColor: const Color(0xFFEAF3FF), side: BorderSide.none, shape: const StadiumBorder(), onPressed: () => setState(() => rm.text = r))),
         ])),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10.1),
         Row(children: [
-          if (widget.t != null) TextButton(onPressed: del, child: Text(st.t('delete'), style: const TextStyle(color: outC, fontSize: 18))),
+          if (widget.t != null) TextButton(onPressed: del, child: Text(st.t('delete'), style: const TextStyle(color: outC, fontSize: 13))),
           const Spacer(),
-          TextButton(onPressed: () => Navigator.pop(c), child: Text(st.t('cancel'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
-          const SizedBox(width: 8),
-          TextButton(onPressed: ok, child: Text(st.t('save'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(st.t('cancel'), style: const TextStyle(fontSize: 14.4, fontWeight: FontWeight.w700))),
+          const SizedBox(width: 5.8),
+          TextButton(onPressed: ok, child: Text(st.t('save'), style: const TextStyle(fontSize: 14.4, fontWeight: FontWeight.w700))),
         ]),
       ])));
   }
@@ -471,8 +477,8 @@ class StatsPage extends StatefulWidget {
 class _StatsState extends State<StatsPage> {
   DateTime mo = DateTime(DateTime.now().year, DateTime.now().month);
   String k = '支出';
-  Widget stat(String l, double v, Color? col) => Expanded(child: Card(elevation: 0, child: Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(l, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+  Widget stat(String l, double v, Color? col) => Expanded(child: Card(elevation: 0, child: Padding(padding: const EdgeInsets.all(7.2), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(l, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         Text(fm(v), style: TextStyle(fontWeight: FontWeight.w700, color: col)),
       ]))));
   @override
@@ -483,19 +489,19 @@ class _StatsState extends State<StatsPage> {
     final by = <String, double>{};
     for (final t in l.where((t) => t['type'] == k)) { final cn = '${t['category']}'.split(':').first.trim(); by[cn] = (by[cn] ?? 0) + _n(t['amount']); }
     final rows = by.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-    return ListView(padding: const EdgeInsets.fromLTRB(12, 8, 12, 90), children: [
+    return ListView(padding: const EdgeInsets.fromLTRB(8.6, 5.8, 8.6, 64.8), children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         IconButton(onPressed: () => setState(() => mo = DateTime(mo.year, mo.month - 1)), icon: const Icon(Icons.chevron_left)),
         Text('${mo.year} / ${mo.month.toString().padLeft(2, '0')}', style: const TextStyle(fontWeight: FontWeight.w600)),
         IconButton(onPressed: () => setState(() => mo = DateTime(mo.year, mo.month + 1)), icon: const Icon(Icons.chevron_right)),
       ]),
       Row(children: [stat(st.t('statsExpense'), e, outC), stat(st.t('statsIncome'), n, inC), stat(st.t('statsBalance'), n - e, null)]),
-      const SizedBox(height: 8),
+      const SizedBox(height: 5.8),
       SegmentedButton<String>(segments: [for (final x in ['支出', '收入']) ButtonSegment<String>(value: x, label: Text(lbl(x)))], selected: {k}, onSelectionChanged: (s) => setState(() => k = s.first)),
-      const SizedBox(height: 8),
+      const SizedBox(height: 5.8),
       for (final r in rows) Card(elevation: 0, child: ListTile(
         leading: CircleAvatar(child: Text(icOf(r.key))), title: Text(nmOf(r.key)),
-        subtitle: Padding(padding: const EdgeInsets.only(top: 6), child: LinearProgressIndicator(value: tot == 0 ? 0 : r.value / tot, color: gold, minHeight: 6, borderRadius: BorderRadius.circular(3))),
+        subtitle: Padding(padding: const EdgeInsets.only(top: 4.3), child: LinearProgressIndicator(value: tot == 0 ? 0 : r.value / tot, color: gold, minHeight: 6, borderRadius: BorderRadius.circular(2.2))),
         trailing: Text(fm(r.value), style: const TextStyle(fontWeight: FontWeight.w600)))),
     ]);
   }
@@ -520,32 +526,32 @@ class WalletPage extends StatelessWidget {
     return GestureDetector(
       onTap: () => accDlg(c, a),
       child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(32), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: g), boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 12, offset: Offset(0, 6))]),
+        padding: const EdgeInsets.all(5.8),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(23), gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: g), boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 12, offset: Offset(0, 6))]),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Container(width: 58, height: 58, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0x33FFFFFF), borderRadius: BorderRadius.circular(18)), child: const Text('💵', style: TextStyle(fontSize: 28))),
-          const SizedBox(height: 8),
-          Text('${a['name']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: wh.copyWith(color: Colors.white70, fontSize: 17)),
-          FittedBox(fit: BoxFit.scaleDown, child: Text(cc ? '${st.f('可用', 'Available')} ${money(bal)}' : money(bal), style: wh.copyWith(fontSize: 26, fontWeight: FontWeight.w800))),
-          if (cc) Text('${st.f('额度', 'Limit')} ${st.cur} ${lim.toStringAsFixed(0)}', style: wh.copyWith(color: Colors.white70, fontSize: 13)),
-          if (cc) Text('📅 ${a['billDay'] ?? 1}${st.t('billDayLabel')} | ${a['dueDay'] ?? 20}${st.t('dueDayLabel')}', style: wh.copyWith(color: Colors.white70, fontSize: 12)),
+          Container(width: 41.8, height: 41.8, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0x33FFFFFF), borderRadius: BorderRadius.circular(13)), child: const Text('💵', style: TextStyle(fontSize: 20.2))),
+          const SizedBox(height: 5.8),
+          Text('${a['name']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: wh.copyWith(color: Colors.white70, fontSize: 12.2)),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(cc ? '${st.f('可用', 'Available')} ${money(bal)}' : money(bal), style: wh.copyWith(fontSize: 18.7, fontWeight: FontWeight.w700))),
+          if (cc) Text('${st.f('额度', 'Limit')} ${st.cur} ${lim.toStringAsFixed(0)}', style: wh.copyWith(color: Colors.white70, fontSize: 11)),
+          if (cc) Text('📅 ${a['billDay'] ?? 1}${st.t('billDayLabel')} | ${a['dueDay'] ?? 20}${st.t('dueDayLabel')}', style: wh.copyWith(color: Colors.white70, fontSize: 11)),
         ])));
   }
-  Widget btn(Widget icon, String l, VoidCallback f) => Padding(padding: const EdgeInsets.only(top: 8), child: OutlinedButton.icon(onPressed: f, icon: icon, label: Text(l)));
+  Widget btn(Widget icon, String l, VoidCallback f) => Padding(padding: const EdgeInsets.only(top: 5.8), child: OutlinedButton.icon(onPressed: f, icon: icon, label: Text(l)));
   @override
   Widget build(BuildContext c) {
     final total = totalAssets();
-    return ListView(padding: const EdgeInsets.fromLTRB(14, 16, 14, 24), children: [
-      Row(children: [Text(st.t('tabWallet'), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800)), const Spacer(), Text('${st.f('管理', 'Manage')}(${st.ac.length})', style: const TextStyle(color: Color(0xFF2196F3), fontSize: 18))]),
-      const SizedBox(height: 14),
-      GridView.count(crossAxisCount: 2, mainAxisSpacing: 16, crossAxisSpacing: 16, childAspectRatio: 1.2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), children: [
+    return ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 20), children: [
+      Row(children: [Text(st.t('tabWallet'), style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700)), const Spacer(), Text('${st.f('管理', 'Manage')}(${st.ac.length})', style: const TextStyle(color: Color(0xFF2196F3), fontSize: 13))]),
+      const SizedBox(height: 10.1),
+      GridView.count(crossAxisCount: 2, mainAxisSpacing: 11.5, crossAxisSpacing: 11.5, childAspectRatio: 1.2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), children: [
         for (var i = 0; i < st.ac.length; i++) card(c, st.ac[i], i),
-        GestureDetector(onTap: () => accDlg(c, null), child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(32), border: Border.all(color: const Color(0xFFCBD5E1), width: 2)), child: const Icon(Icons.add, size: 48, color: Color(0xFF94A3B8)))),
+        GestureDetector(onTap: () => accDlg(c, null), child: Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(23), border: Border.all(color: const Color(0xFFCBD5E1), width: 1.4)), child: const Icon(Icons.add, size: 34.6, color: Color(0xFF94A3B8)))),
       ]),
-      const SizedBox(height: 20),
-      Container(padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
-        child: Row(children: [Text(st.t('totalAssets'), style: const TextStyle(color: Colors.black54, fontSize: 18)), const Spacer(), Text(money(total), style: const TextStyle(color: Color(0xFF1565C0), fontSize: 30, fontWeight: FontWeight.w800))])),
-      const SizedBox(height: 12),
+      const SizedBox(height: 14.4),
+      Container(padding: const EdgeInsets.symmetric(horizontal: 15.8, vertical: 15.8), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17.3)),
+        child: Row(children: [Text(st.t('totalAssets'), style: const TextStyle(color: Colors.black54, fontSize: 13)), const Spacer(), Text(money(total), style: const TextStyle(color: Color(0xFF1565C0), fontSize: 21.6, fontWeight: FontWeight.w700))])),
+      const SizedBox(height: 8.6),
       btn(const Icon(Icons.ios_share), st.f('导出备份', 'Export backup'), exportData),
       btn(const Icon(Icons.file_open), st.f('导入备份', 'Import backup'), () => importData(c)),
     ]);
